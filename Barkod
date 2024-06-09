@@ -1,0 +1,116 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+public class BarcodeReaderButton {
+    private static List<Product> shoppingCart = new ArrayList<>();
+
+    public static void main(String[] args) {
+        // Create a JFrame
+        JFrame frame = new JFrame("Barcode Reader");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Create a JButton
+        JButton button = new JButton("Open Barcode Reader");
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // Open the barcode reader when the button is clicked
+                openBarcodeReader();
+            }
+        });
+
+        // Create a "Sepete Ekle" button
+        JButton addToCartButton = new JButton("Sepete Ekle");
+        addToCartButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // Show the shopping cart when the button is clicked
+                showShoppingCart();
+            }
+        });
+
+        // Add the buttons to the frame
+        frame.getContentPane().add(button, BorderLayout.CENTER);
+        frame.getContentPane().add(addToCartButton, BorderLayout.SOUTH);
+
+        // Set the frame size and visibility
+        frame.setSize(300, 200);
+        frame.setVisible(true);
+    }
+
+    private static void openBarcodeReader() {
+        // Replace this with your actual barcode reader code
+        String barcode = readBarcode(); // Barkod okuyucunuzdan alınan barkod numarasını elde edin
+
+        // API veya web servisi kullanarak, ürünün fiyatını bulmak
+        String apiUrl = "https://api.example.com/product/price"; // Örnek API URL
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+          .uri(URI.create(apiUrl + "?barcode=" + barcode))
+          .GET()
+          .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            String price = response.body();
+
+            // Fiyatı kullanıcıya gösterin
+            JOptionPane.showMessageDialog(null, "Ürün fiyatı: " + price);
+
+            // Ürün sepete ekle
+            Product product = new Product(barcode, price);
+            shoppingCart.add(product);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
+        } catch (InterruptedException e) {
+            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
+            Thread.currentThread().interrupt(); // Don't forget to restore the interrupt status
+        }
+    }
+
+    private static void showShoppingCart() {
+        // Sepetteki ürünleri listeleyin
+        String cartContent = "";
+        double totalPrice = 0;
+        for (Product product : shoppingCart) {
+            cartContent += "Barkod: " + product.getBarcode() + ", Fiyat: " + product.getPrice() + "\n";
+            totalPrice += Double.parseDouble(product.getPrice());
+        }
+        cartContent += "Toplam Fiyat: " + totalPrice;
+        JOptionPane.showMessageDialog(null, "Sepetiniz:\n" + cartContent);
+    }
+
+    private static String readBarcode() {
+        // Replace this with your actual barcode reader code
+        // For example, you can use a library like ZXing to read barcodes
+        // ZXing barcodeReader = new ZXing();
+        // barcodeReader.init();
+        // String barcode = barcodeReader.scan();
+        // return barcode;
+        return "123";
+    }
+}
+
+class Product {
+    private String barcode;
+    private String price;
+
+    public Product(String barcode, String price) {
+        this.barcode = barcode;
+        this.price = price;
+    }
+
+    public String getBarcode() {
+        return barcode;
+    }
+
+    public String getPrice() {
+        return price;
+    }
+}
